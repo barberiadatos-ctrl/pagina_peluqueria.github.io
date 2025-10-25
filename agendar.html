@@ -70,13 +70,18 @@
       text-align: left;
     }
 
+    /* ---- NUEVO DISEÑO HORARIOS ---- */
     .horario {
       background-color: #1a1a1a;
       border: 1px solid #333;
-      padding: 8px 10px;
-      border-radius: 8px;
+      padding: 10px 12px;
+      border-radius: 10px;
       margin: 6px 0;
       cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1em;
       transition: all 0.2s;
     }
 
@@ -86,8 +91,26 @@
     }
 
     .horario.ocupado {
-      color: #888;
+      color: #ffb3b3;
+      border-color: #c94b4b;
+      background-color: rgba(201, 75, 75, 0.15);
       cursor: not-allowed;
+    }
+
+    .horario span.estado {
+      font-weight: 500;
+      text-align: right;
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
+
+    .horario span.hora {
+      flex-grow: 1;
+      text-align: left;
+    }
+
+    .horario.libre span.estado {
+      color: #7fff7f;
     }
 
     .boton {
@@ -119,7 +142,6 @@
       .container {
         padding: 25px;
       }
-
       h1 {
         font-size: 1.5em;
       }
@@ -205,16 +227,34 @@
       const lista = document.getElementById("listaHorarios");
       lista.innerHTML = "<h3>Horarios disponibles:</h3>";
 
-      for (let h = 8; h < 22; h++) {
+      for (let h = 10; h <= 20; h++) {
         for (let m of [0, 30]) {
-          const hora = `${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`;
-          const ocupado = ocupados.includes(hora);
+          const hora24 = `${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`;
+
+          // Franja de almuerzo 1:30–2:30
+          if (h === 13 && m === 30) {
+            const div = document.createElement("div");
+            div.className = "horario ocupado";
+            div.innerHTML = `<span class="hora">1:30 – 2:30</span> <span class="estado">🕑 Hora de almuerzo (No disponible)</span>`;
+            lista.appendChild(div);
+            continue;
+          }
+          if (h === 14 && m === 0) continue;
+          if (h === 14 && m === 30) continue;
+
+          // Formato 12 horas sin am/pm
+          let hora12 = h > 12 ? h - 12 : h;
+          const horaFormateada = `${hora12}:${m === 0 ? "00" : "30"}`;
+
+          const ocupado = ocupados.includes(hora24);
           const div = document.createElement("div");
           div.className = `horario ${ocupado ? "ocupado" : "libre"}`;
-          div.textContent = `${hora} — ${ocupado ? "Ocupado" : "Libre"}`;
+          div.innerHTML = `<span class="hora">${horaFormateada}</span> <span class="estado">${ocupado ? "Ocupado" : "Libre"}</span>`;
+
           if (!ocupado) {
-            div.addEventListener("click", () => seleccionarHora(hora, div));
+            div.addEventListener("click", () => seleccionarHora(hora24, div));
           }
+
           lista.appendChild(div);
         }
       }
@@ -222,41 +262,40 @@
 
     function seleccionarHora(hora, div) {
       horaSeleccionada = hora;
-      document
-        .querySelectorAll(".libre")
-        .forEach((el) => (el.style.border = "1px solid #333"));
+      document.querySelectorAll(".libre").forEach((el) => {
+        el.style.border = "1px solid #333";
+        el.style.backgroundColor = "#1a1a1a";
+      });
       div.style.border = "2px solid gold";
       div.style.backgroundColor = "rgba(255, 215, 0, 0.1)";
     }
 
-    document
-      .getElementById("formCita")
-      .addEventListener("submit", async (e) => {
-        e.preventDefault();
-        if (!horaSeleccionada) return alert("Selecciona un horario libre");
+    document.getElementById("formCita").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!horaSeleccionada) return alert("Selecciona un horario libre");
 
-        const datos = {
-          nombre: document.getElementById("nombre").value,
-          telefono: document.getElementById("telefono").value,
-          servicio: document.getElementById("servicio").value,
-          fecha: document.getElementById("fecha").value,
-          hora: horaSeleccionada,
-          precio: parseFloat(
-            document.getElementById("precio").value.replace("$", "") || 0
-          ),
-        };
+      const datos = {
+        nombre: document.getElementById("nombre").value,
+        telefono: document.getElementById("telefono").value,
+        servicio: document.getElementById("servicio").value,
+        fecha: document.getElementById("fecha").value,
+        hora: horaSeleccionada,
+        precio: parseFloat(
+          document.getElementById("precio").value.replace("$", "") || 0
+        ),
+      };
 
-        const { error } = await supabase.from("citas").insert([datos]);
+      const { error } = await supabase.from("citas").insert([datos]);
 
-        if (error) {
-          alert("❌ Error al guardar la cita");
-          console.error(error);
-        } else {
-          alert("✅ Turno agendado con éxito!");
-          e.target.reset();
-          document.getElementById("listaHorarios").innerHTML = "";
-        }
-      });
+      if (error) {
+        alert("❌ Error al guardar la cita");
+        console.error(error);
+      } else {
+        alert("✅ Turno agendado con éxito!");
+        e.target.reset();
+        document.getElementById("listaHorarios").innerHTML = "";
+      }
+    });
   </script>
 </body>
 </html>
