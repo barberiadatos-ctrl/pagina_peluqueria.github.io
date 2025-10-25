@@ -150,7 +150,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>💈 Agendar Cita</h1>
+    <h1>Agendar Turno</h1>
 
     <form id="formCita">
       <label for="nombre">Nombre completo</label>
@@ -178,7 +178,7 @@
         <h3>Selecciona un horario:</h3>
       </div>
 
-      <button type="submit" class="boton">💾 Guardar cita</button>
+      <button type="submit" class="boton">Guardar turno</button>
     </form>
 
     <footer>© Dorado Barber — Agenda online</footer>
@@ -288,7 +288,7 @@
       const { error } = await supabase.from("citas").insert([datos]);
 
       if (error) {
-        alert("❌ Error al guardar la cita");
+        alert("❌ Error al guardar el turno");
         console.error(error);
       } else {
         alert("✅ Turno agendado con éxito!");
@@ -296,6 +296,11 @@
         document.getElementById("listaHorarios").innerHTML = "";
       }
     });
+    // 🗓️ Evitar seleccionar fechas pasadas
+const fechaInput = document.getElementById("fecha");
+const hoy = new Date().toISOString().split("T")[0];
+fechaInput.min = hoy;
+
   </script>
 </body>
 </html>
