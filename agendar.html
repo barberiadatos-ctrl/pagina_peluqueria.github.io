@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agendar Cita — Dorado Barber</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #000;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background-image: radial-gradient(circle at top center, #111 0%, #000 80%);
+    }
+
+    .container {
+      background-color: #111;
+      padding: 30px 40px;
+      border-radius: 15px;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+      max-width: 450px;
+      width: 90%;
+      text-align: center;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .container:hover {
+      box-shadow: 0 0 40px rgba(255, 215, 0, 0.35);
+    }
+
+    h1 {
+      color: gold;
+      font-size: 1.8em;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin-top: 15px;
+      font-weight: 500;
+      color: #ddd;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: none;
+      border-radius: 8px;
+      background-color: #222;
+      color: #fff;
+      font-size: 1em;
+      box-shadow: inset 0 0 5px rgba(255, 215, 0, 0.2);
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+
+    #listaHorarios {
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .horario {
+      background-color: #1a1a1a;
+      border: 1px solid #333;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin: 6px 0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .horario.libre:hover {
+      background-color: rgba(255, 215, 0, 0.1);
+      border-color: gold;
+    }
+
+    .horario.ocupado {
+      color: #888;
+      cursor: not-allowed;
+    }
+
+    .boton {
+      background: linear-gradient(90deg, gold, #d4af37);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      color: #000;
+      font-weight: bold;
+      font-size: 1em;
+      margin-top: 20px;
+      width: 100%;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.3s;
+    }
+
+    .boton:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    }
+
+    footer {
+      margin-top: 20px;
+      font-size: 0.9em;
+      color: #aaa;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 25px;
+      }
+
+      h1 {
+        font-size: 1.5em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>💈 Agendar Cita</h1>
+
+    <form id="formCita">
+      <label for="nombre">Nombre completo</label>
+      <input type="text" id="nombre" required />
+
+      <label for="telefono">Teléfono</label>
+      <input type="tel" id="telefono" required />
+
+      <label for="servicio">Servicio</label>
+      <select id="servicio" required>
+        <option value="">Seleccione un servicio</option>
+        <option value="Corte de niño">Corte de niño</option>
+        <option value="Corte de caballero">Corte de caballero</option>
+        <option value="Corte de cabello, Barba">Corte de cabello, Barba</option>
+        <option value="Corte de cabello, Barba, Cejas">Corte de cabello, Barba, Cejas</option>
+      </select>
+
+      <label for="precio">Precio</label>
+      <input type="text" id="precio" readonly />
+
+      <label for="fecha">Fecha</label>
+      <input type="date" id="fecha" required />
+
+      <div id="listaHorarios">
+        <h3>Selecciona un horario:</h3>
+      </div>
+
+      <button type="submit" class="boton">💾 Guardar cita</button>
+    </form>
+
+    <footer>© Dorado Barber — Agenda online</footer>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const SUPABASE_URL = "https://vukawliizqcjhptpyxdi.supabase.co";
+    const SUPABASE_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1a2F3bGlpenFjamhwdHB5eGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTEwMzksImV4cCI6MjA3Njg4NzAzOX0.XhH_NEwxiEaYqS4vZiWm4DjSXQ1bLZkMtdB0g8ewNtM";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const precios = {
+      "Corte de niño": 14000,
+      "Corte de caballero": 16000,
+      "Corte de cabello, Barba": 20000,
+      "Corte de cabello, Barba, Cejas": 25000
+    };
+
+    let horaSeleccionada = "";
+
+    document.getElementById("servicio").addEventListener("change", () => {
+      const servicio = document.getElementById("servicio").value;
+      document.getElementById("precio").value = precios[servicio]
+        ? `$${precios[servicio]}`
+        : "";
+    });
+
+    document.getElementById("fecha").addEventListener("change", async () => {
+      const fecha = document.getElementById("fecha").value;
+      if (!fecha) return;
+
+      const { data: citas, error } = await supabase
+        .from("citas")
+        .select("hora")
+        .eq("fecha", fecha);
+
+      if (error) {
+        alert("Error al cargar los horarios.");
+        console.error(error);
+        return;
+      }
+
+      const ocupados = citas.map((c) => c.hora);
+      const lista = document.getElementById("listaHorarios");
+      lista.innerHTML = "<h3>Horarios disponibles:</h3>";
+
+      for (let h = 8; h < 22; h++) {
+        for (let m of [0, 30]) {
+          const hora = `${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`;
+          const ocupado = ocupados.includes(hora);
+          const div = document.createElement("div");
+          div.className = `horario ${ocupado ? "ocupado" : "libre"}`;
+          div.textContent = `${hora} — ${ocupado ? "Ocupado" : "Libre"}`;
+          if (!ocupado) {
+            div.addEventListener("click", () => seleccionarHora(hora, div));
+          }
+          lista.appendChild(div);
+        }
+      }
+    });
+
+    function seleccionarHora(hora, div) {
+      horaSeleccionada = hora;
+      document
+        .querySelectorAll(".libre")
+        .forEach((el) => (el.style.border = "1px solid #333"));
+      div.style.border = "2px solid gold";
+      div.style.backgroundColor = "rgba(255, 215, 0, 0.1)";
+    }
+
+    document
+      .getElementById("formCita")
+      .addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!horaSeleccionada) return alert("Selecciona un horario libre");
+
+        const datos = {
+          nombre: document.getElementById("nombre").value,
+          telefono: document.getElementById("telefono").value,
+          servicio: document.getElementById("servicio").value,
+          fecha: document.getElementById("fecha").value,
+          hora: horaSeleccionada,
+          precio: parseFloat(
+            document.getElementById("precio").value.replace("$", "") || 0
+          ),
+        };
+
+        const { error } = await supabase.from("citas").insert([datos]);
+
+        if (error) {
+          alert("❌ Error al guardar la cita");
+          console.error(error);
+        } else {
+          alert("✅ Turno agendado con éxito!");
+          e.target.reset();
+          document.getElementById("listaHorarios").innerHTML = "";
+        }
+      });
+  </script>
+</body>
+</html>
