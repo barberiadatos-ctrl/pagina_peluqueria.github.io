@@ -1,10 +1,11 @@
 {
   "name": "Toche's Nissi Barber",
-  "short_name": "Toche's Barber",
-  "start_url": "index.html",
-  "display": "standalone",
+  "short_name": "Nissi Barber",
+  "start_url": "./index.html",
+  "display": "fullscreen",
   "background_color": "#000000",
   "theme_color": "#f5c518",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icon-192.png",
