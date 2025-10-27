@@ -6,14 +6,16 @@
   <title>Toche's Nissi Barber</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").then(() => {
-      console.log("✅ Service Worker registrado correctamente");
-    });
-  }
-</script>
+  <meta name="theme-color" content="#000000">
+
+  <!-- Registro del Service Worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js")
+        .then(() => console.log("✅ Service Worker registrado correctamente"))
+        .catch(err => console.error("❌ Error registrando el Service Worker:", err));
+    }
+  </script>
 
   <style>
     body {
@@ -212,8 +214,8 @@
     <ul>
       <li><span>Corte de niño</span> <span>$14.000</span></li>
       <li><span>Corte de caballero</span> <span>$16.000</span></li>
-      <li><span>Corte de cabello, Barba</span> <span>$20.000</span></li>
-      <li><span>Corte de cabello, Barba, Cejas</span> <span>$25.000</span></li>
+      <li><span>Corte de cabello y barba</span> <span>$20.000</span></li>
+      <li><span>Corte + Barba + Cejas</span> <span>$25.000</span></li>
     </ul>
   </section>
 
