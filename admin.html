@@ -56,6 +56,7 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
       max-width: 950px;
       overflow-x: auto;
+      transition: all 0.3s ease;
     }
 
     .dia h2 {
@@ -66,6 +67,7 @@
       padding: 0.8rem;
       border-radius: 12px 12px 0 0;
       font-size: 1.2rem;
+      text-transform: capitalize;
     }
 
     table {
@@ -102,7 +104,6 @@
       font-size: 0.9rem;
     }
 
-    /* --- Botón volver arriba --- */
     #btnArriba {
       position: fixed;
       bottom: 25px;
@@ -127,12 +128,26 @@
       transform: scale(1.1);
     }
 
-    /* --- Responsive --- */
+    /* 💈 Estilos para días especiales */
+    .dia-futuro {
+      box-shadow: 0 0 15px gold;
+      border: 2px solid gold;
+    }
+
+    .dia-hoy {
+      border: 2px solid #fff;
+      box-shadow: 0 0 20px #fff;
+    }
+
+    .dia-pasado {
+      opacity: 0.5;
+      filter: grayscale(0.3);
+    }
+
     @media (max-width: 768px) {
       table, th, td {
         font-size: 0.85rem;
       }
-
       .dia {
         width: 95%;
       }
@@ -154,104 +169,118 @@
   <footer>💈 <span style="color:#f5c518;">Dorado Barber</span> — Panel de administración</footer>
 
   <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    const SUPABASE_URL = "https://vukawliizqcjhptpyxdi.supabase.co";
-    const SUPABASE_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1a2F3bGlpenFjamhwdHB5eGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTEwMzksImV4cCI6MjA3Njg4NzAzOX0.XhH_NEwxiEaYqS4vZiWm4DjSXQ1bLZkMtdB0g8ewNtM";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const SUPABASE_URL = "https://vukawliizqcjhptpyxdi.supabase.co";
+  const SUPABASE_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1a2F3bGlpenFjamhwdHB5eGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTEwMzksImV4cCI6MjA3Njg4NzAzOX0.XhH_NEwxiEaYqS4vZiWm4DjSXQ1bLZkMtdB0g8ewNtM";
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const contenedor = document.getElementById("contenedorCitas");
-    const btnActualizar = document.getElementById("actualizar");
-    const btnArriba = document.getElementById("btnArriba");
+  const contenedor = document.getElementById("contenedorCitas");
+  const btnActualizar = document.getElementById("actualizar");
+  const btnArriba = document.getElementById("btnArriba");
 
-    btnActualizar.addEventListener("click", cargarCitas);
+  btnActualizar.addEventListener("click", cargarCitas);
 
-    async function cargarCitas() {
-      contenedor.innerHTML = "<p style='text-align:center;color:#bbb;'>Cargando citas...</p>";
+  async function cargarCitas() {
+    contenedor.innerHTML = "<p style='text-align:center;color:#bbb;'>Cargando citas...</p>";
 
-      const { data: citas, error } = await supabase
-        .from("citas")
-        .select("*")
-        .order("fecha", { ascending: true })
-        .order("hora", { ascending: true });
+    const { data: citas, error } = await supabase
+      .from("citas")
+      .select("*")
+      .order("fecha", { ascending: true })
+      .order("hora", { ascending: true });
 
-      if (error) {
-        console.error("Error al cargar citas:", error);
-        contenedor.innerHTML = "<p style='text-align:center;color:red;'>Error al cargar citas</p>";
-        return;
-      }
-
-      if (!citas.length) {
-        contenedor.innerHTML = "<p style='text-align:center;color:#aaa;'>No hay citas registradas</p>";
-        return;
-      }
-
-      // Agrupar por fecha
-      const citasPorFecha = {};
-      for (const cita of citas) {
-        if (!citasPorFecha[cita.fecha]) citasPorFecha[cita.fecha] = [];
-        citasPorFecha[cita.fecha].push(cita);
-      }
-
-      // Generar bloques por día
-      contenedor.innerHTML = "";
-      for (const fecha in citasPorFecha) {
-        const lista = citasPorFecha[fecha];
-        const fechaObj = new Date(fecha + "T00:00:00");
-        const diaSemana = fechaObj.toLocaleDateString("es-ES", {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric"
-        });
-
-        const divDia = document.createElement("div");
-        divDia.className = "dia";
-        divDia.innerHTML = `
-          <h2>${diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)}</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>Teléfono</th>
-                <th>Servicio</th>
-                <th>Hora</th>
-                <th>Precio</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${lista
-                .sort((a, b) => a.hora.localeCompare(b.hora))
-                .map(
-                  c => `
-                  <tr>
-                    <td>${c.nombre}</td>
-                    <td>${c.telefono}</td>
-                    <td>${c.servicio}</td>
-                    <td>${c.hora}</td>
-                    <td>$${c.precio}</td>
-                  </tr>
-                `
-                )
-                .join("")}
-            </tbody>
-          </table>
-        `;
-        contenedor.appendChild(divDia);
-      }
+    if (error) {
+      console.error("Error al cargar citas:", error);
+      contenedor.innerHTML = "<p style='text-align:center;color:red;'>Error al cargar citas</p>";
+      return;
     }
 
-    // Mostrar botón arriba solo cuando se hace scroll
-    window.addEventListener("scroll", () => {
-      btnArriba.style.display = window.scrollY > 300 ? "flex" : "none";
-    });
+    if (!citas.length) {
+      contenedor.innerHTML = "<p style='text-align:center;color:#aaa;'>No hay citas registradas</p>";
+      return;
+    }
 
-    btnArriba.addEventListener("click", () => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
+    const citasPorFecha = {};
+    for (const cita of citas) {
+      if (!citasPorFecha[cita.fecha]) citasPorFecha[cita.fecha] = [];
+      citasPorFecha[cita.fecha].push(cita);
+    }
 
-    cargarCitas();
-  </script>
+    const hoy = new Date().toISOString().split("T")[0];
+    const fechas = Object.keys(citasPorFecha);
+    const fechasOrdenadas = fechas.sort((a, b) => new Date(a) - new Date(b));
+
+    const futuras = fechasOrdenadas.filter(f => new Date(f) > new Date(hoy));
+    const hoyFecha = fechasOrdenadas.find(f => f === hoy);
+    const pasadas = fechasOrdenadas.filter(f => new Date(f) < new Date(hoy));
+
+    const ordenFinal = [...futuras, ...(hoyFecha ? [hoyFecha] : []), ...pasadas.reverse()];
+
+    contenedor.innerHTML = "";
+
+    for (const fecha of ordenFinal) {
+      const lista = citasPorFecha[fecha];
+      const fechaObj = new Date(fecha + "T00:00:00");
+
+      const esHoy = fecha === hoy;
+      const esPasado = new Date(fecha) < new Date(hoy);
+      const claseDia = esHoy ? "dia-hoy" : esPasado ? "dia-pasado" : "dia-futuro";
+
+      const titulo = esHoy
+        ? "Hoy"
+        : fechaObj.toLocaleDateString("es-ES", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+
+      const divDia = document.createElement("div");
+      divDia.className = `dia ${claseDia}`;
+      divDia.innerHTML = `
+        <h2>${titulo.charAt(0).toUpperCase() + titulo.slice(1)}</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Teléfono</th>
+              <th>Servicio</th>
+              <th>Hora</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${lista
+              .sort((a, b) => a.hora.localeCompare(b.hora))
+              .map(
+                c => `
+                <tr>
+                  <td>${c.nombre}</td>
+                  <td>${c.telefono}</td>
+                  <td>${c.servicio}</td>
+                  <td>${c.hora}</td>
+                </tr>
+              `
+              )
+              .join("")}
+          </tbody>
+        </table>
+      `;
+      contenedor.appendChild(divDia);
+    }
+  }
+
+  window.addEventListener("scroll", () => {
+    btnArriba.style.display = window.scrollY > 300 ? "flex" : "none";
+  });
+
+  btnArriba.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  cargarCitas();
+</script>
+
 </body>
 </html>

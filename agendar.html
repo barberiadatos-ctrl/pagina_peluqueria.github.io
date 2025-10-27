@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Agendar Cita — Dorado Barber</title>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     body {
       font-family: "Poppins", sans-serif;
@@ -70,7 +72,6 @@
       text-align: left;
     }
 
-    /* ---- NUEVO DISEÑO HORARIOS ---- */
     .horario {
       background-color: #1a1a1a;
       border: 1px solid #333;
@@ -137,15 +138,6 @@
       font-size: 0.9em;
       color: #aaa;
     }
-
-    @media (max-width: 480px) {
-      .container {
-        padding: 25px;
-      }
-      h1 {
-        font-size: 1.5em;
-      }
-    }
   </style>
 </head>
 <body>
@@ -186,7 +178,6 @@
 
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
     const SUPABASE_URL = "https://vukawliizqcjhptpyxdi.supabase.co";
     const SUPABASE_KEY =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1a2F3bGlpenFjamhwdHB5eGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTEwMzksImV4cCI6MjA3Njg4NzAzOX0.XhH_NEwxiEaYqS4vZiWm4DjSXQ1bLZkMtdB0g8ewNtM";
@@ -200,6 +191,9 @@
     };
 
     let horaSeleccionada = "";
+    const fechaInput = document.getElementById("fecha");
+    const hoy = new Date().toISOString().split("T")[0];
+    fechaInput.min = hoy;
 
     document.getElementById("servicio").addEventListener("change", () => {
       const servicio = document.getElementById("servicio").value;
@@ -209,7 +203,7 @@
     });
 
     document.getElementById("fecha").addEventListener("change", async () => {
-      const fecha = document.getElementById("fecha").value;
+      const fecha = fechaInput.value;
       if (!fecha) return;
 
       const { data: citas, error } = await supabase
@@ -218,12 +212,11 @@
         .eq("fecha", fecha);
 
       if (error) {
-        alert("Error al cargar los horarios.");
-        console.error(error);
+        Swal.fire({ icon: "error", title: "Error", text: "No se pudieron cargar los horarios.", background: "#111", color: "#fff" });
         return;
       }
 
-      const ocupados = citas.map((c) => c.hora);
+      const ocupados = citas.map(c => c.hora);
       const lista = document.getElementById("listaHorarios");
       lista.innerHTML = "<h3>Horarios disponibles:</h3>";
 
@@ -231,30 +224,25 @@
         for (let m of [0, 30]) {
           const hora24 = `${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`;
 
-          // Franja de almuerzo 1:30–2:30
           if (h === 13 && m === 30) {
             const div = document.createElement("div");
             div.className = "horario ocupado";
-            div.innerHTML = `<span class="hora">1:30 – 2:30</span> <span class="estado">🕑 Hora de almuerzo (No disponible)</span>`;
+            div.innerHTML = `<span class="hora">1:30 – 2:30</span> <span class="estado">🕑 Almuerzo</span>`;
             lista.appendChild(div);
             continue;
           }
-          if (h === 14 && m === 0) continue;
-          if (h === 14 && m === 30) continue;
+          if (h === 14) continue;
 
-          // Formato 12 horas sin am/pm
           let hora12 = h > 12 ? h - 12 : h;
-          const horaFormateada = `${hora12}:${m === 0 ? "00" : "30"}`;
-
+          const ampm = h >= 12 ? "PM" : "AM";
+          const horaFormateada = `${hora12}:${m === 0 ? "00" : "30"} ${ampm}`;
           const ocupado = ocupados.includes(hora24);
+
           const div = document.createElement("div");
           div.className = `horario ${ocupado ? "ocupado" : "libre"}`;
           div.innerHTML = `<span class="hora">${horaFormateada}</span> <span class="estado">${ocupado ? "Ocupado" : "Libre"}</span>`;
 
-          if (!ocupado) {
-            div.addEventListener("click", () => seleccionarHora(hora24, div));
-          }
-
+          if (!ocupado) div.addEventListener("click", () => seleccionarHora(hora24, div));
           lista.appendChild(div);
         }
       }
@@ -262,7 +250,7 @@
 
     function seleccionarHora(hora, div) {
       horaSeleccionada = hora;
-      document.querySelectorAll(".libre").forEach((el) => {
+      document.querySelectorAll(".libre").forEach(el => {
         el.style.border = "1px solid #333";
         el.style.backgroundColor = "#1a1a1a";
       });
@@ -272,35 +260,61 @@
 
     document.getElementById("formCita").addEventListener("submit", async (e) => {
       e.preventDefault();
-      if (!horaSeleccionada) return alert("Selecciona un horario libre");
+
+      if (!horaSeleccionada) {
+        Swal.fire({ icon: "warning", title: "Selecciona un horario", background: "#111", color: "#fff" });
+        return;
+      }
+
+      const nombre = document.getElementById("nombre").value.trim();
+      const telefono = document.getElementById("telefono").value.trim();
+      const servicio = document.getElementById("servicio").value;
+      const fecha = document.getElementById("fecha").value;
 
       const datos = {
-        nombre: document.getElementById("nombre").value,
-        telefono: document.getElementById("telefono").value,
-        servicio: document.getElementById("servicio").value,
-        fecha: document.getElementById("fecha").value,
+        nombre,
+        telefono,
+        servicio,
+        fecha,
         hora: horaSeleccionada,
-        precio: parseFloat(
-          document.getElementById("precio").value.replace("$", "") || 0
-        ),
+        precio: parseFloat(document.getElementById("precio").value.replace("$", "") || 0),
       };
 
       const { error } = await supabase.from("citas").insert([datos]);
 
       if (error) {
-        alert("❌ Error al guardar el turno");
-        console.error(error);
-      } else {
-        alert("✅ Turno agendado con éxito!");
-        e.target.reset();
-        document.getElementById("listaHorarios").innerHTML = "";
+        Swal.fire({
+          icon: "error",
+          title: "❌ No se pudo guardar",
+          text: "Hubo un error al registrar tu turno.",
+          background: "#111",
+          color: "#fff",
+          confirmButtonColor: "#ff5555"
+        });
+        return;
       }
-    });
-    // 🗓️ Evitar seleccionar fechas pasadas
-const fechaInput = document.getElementById("fecha");
-const hoy = new Date().toISOString().split("T")[0];
-fechaInput.min = hoy;
 
+      // ✅ Éxito con animación
+      Swal.fire({
+        icon: "success",
+        title: "Turno agendado 💈",
+        text: "Tu cita fue registrada con éxito.",
+        background: "#111",
+        color: "#fff",
+        confirmButtonColor: "gold",
+        showConfirmButton: false,
+        timer: 2500
+      });
+
+      // 💬 Enviar WhatsApp automático
+      const mensaje = `📅 Nueva cita agendada:\n👤 Nombre: ${nombre}\n Hora: ${horaSeleccionada}\n Fecha: ${fecha}`;
+      const numeroBarberia = "573202949645"; // 👉 CAMBIA ESTE NÚMERO
+      const url = `https://wa.me/${numeroBarberia}?text=${encodeURIComponent(mensaje)}`;
+      setTimeout(() => window.open(url, "_blank"), 2500);
+
+      e.target.reset();
+      document.getElementById("listaHorarios").innerHTML = "<h3>Selecciona un horario:</h3>";
+    });
   </script>
 </body>
 </html>

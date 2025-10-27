@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Peluquería Elegance</title>
+  <title>Toche's Nissi Barber</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    /* --- Estilos generales --- */
     body {
       margin: 0;
       font-family: 'Poppins', sans-serif;
@@ -15,23 +14,47 @@
     }
 
     header {
-      background: linear-gradient(90deg, #1c1c1c, #3b3b3b);
-      color: #f5c518;
-      padding: 1.5rem 0;
+      background: linear-gradient(90deg, #000, #1c1c1c);
+      padding: 2rem 0;
       text-align: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      position: relative;
+      box-shadow: 0 2px 15px rgba(255, 255, 255, 0.1);
     }
 
+    /* ✨ Título con efecto iluminado */
     header h1 {
-      font-size: 2rem;
+      font-size: 2.4rem;
       margin: 0;
-      font-weight: 700;
+      font-weight: 800;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow:
+        0 0 10px rgba(255, 255, 255, 0.6),
+        0 0 20px rgba(255, 255, 255, 0.4),
+        0 0 30px rgba(255, 255, 255, 0.2);
+      animation: glow 3s infinite alternate ease-in-out;
+    }
+
+    @keyframes glow {
+      from {
+        text-shadow:
+          0 0 5px rgba(255, 255, 255, 0.4),
+          0 0 15px rgba(255, 255, 255, 0.2);
+      }
+      to {
+        text-shadow:
+          0 0 15px rgba(255, 255, 255, 0.8),
+          0 0 30px rgba(255, 255, 255, 0.5),
+          0 0 45px rgba(255, 255, 255, 0.3);
+      }
     }
 
     header p {
       color: #ddd;
-      font-size: 0.95rem;
-      margin-top: 0.3rem;
+      font-size: 1rem;
+      margin-top: 0.4rem;
+      letter-spacing: 1px;
     }
 
     nav {
@@ -53,7 +76,6 @@
       color: #f5c518;
     }
 
-    /* --- Sección principal --- */
     .hero {
       background: linear-gradient(to bottom right, #ffffff, #eaeaea);
       text-align: center;
@@ -91,7 +113,6 @@
       transform: translateY(-2px);
     }
 
-    /* --- Sección de servicios --- */
     .servicios {
       background: #fff;
       margin: 2.5rem auto;
@@ -127,7 +148,6 @@
       color: #333;
     }
 
-    /* --- Footer --- */
     footer {
       text-align: center;
       padding: 1.5rem;
@@ -143,10 +163,9 @@
       margin-left: 0.3rem;
     }
 
-    /* --- Adaptable a móvil --- */
     @media (max-width: 768px) {
       header h1 {
-        font-size: 1.6rem;
+        font-size: 1.8rem;
       }
       .hero h2 {
         font-size: 1.5rem;
@@ -163,8 +182,7 @@
 </head>
 <body>
   <header>
-    <h1><i class="fa-solid fa-scissors"></i> Peluquería Elegance</h1>
-    <p>Tu estilo, nuestro arte ✂️</p>
+    <h1><i class="fa-solid fa-scissors"></i> Toche's Nissi Barber</h1>
   </header>
 
   <nav>
@@ -186,14 +204,13 @@
       <li><span>Corte de caballero</span> <span>$16.000</span></li>
       <li><span>Corte de cabello, Barba</span> <span>$20.000</span></li>
       <li><span>Corte de cabello, Barba, Cejas</span> <span>$25.000</span></li>
-      
     </ul>
   </section>
 
   <footer>
     <p><i class="fa-solid fa-location-dot"></i> Calle Principal #123, Ciudad Bella | <i class="fa-solid fa-phone"></i> 300 123 4567</p>
-    <p>Horario: Lunes a Domingo 9:00am – 7:00pm</p>
-    <p>© 2025 <strong>Peluquería Toche's</strong></p>
+    <p>Horario: Lunes a Domingo 10:00am – 8:00pm</p>
+    <p>© 2025 <strong>Toche's Nissi Barber</strong></p>
   </footer>
 </body>
 </html>
