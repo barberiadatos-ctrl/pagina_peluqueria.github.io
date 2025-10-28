@@ -148,7 +148,7 @@
       <input type="text" id="nombre" required />
 
       <label for="telefono">Teléfono</label>
-      <input type="tel" id="telefono" required />
+      <input type="tel" id="telefono" required pattern="\d{10}" maxlength="10" placeholder="Ej: 3001234567" title="Debe tener exactamente 10 números" />
 
       <label for="servicio">Servicio</label>
       <select id="servicio" required>
@@ -176,201 +176,179 @@
   </div>
 
   <script type="module">
-  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-  const SUPABASE_URL = "https://vukawliizqcjhptpyxdi.supabase.co";
-  const SUPABASE_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1a2F3bGlpenFjamhwdHB5eGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTEwMzksImV4cCI6MjA3Njg4NzAzOX0.XhH_NEwxiEaYqS4vZiWm4DjSXQ1bLZkMtdB0g8ewNtM";
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    const SUPABASE_URL = "https://vukawliizqcjhptpyxdi.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1a2F3bGlpenFjamhwdHB5eGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTEwMzksImV4cCI6MjA3Njg4NzAzOX0.XhH_NEwxiEaYqS4vZiWm4DjSXQ1bLZkMtdB0g8ewNtM";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const precios = {
-    "Corte de niño": 14000,
-    "Corte de caballero": 16000,
-    "Corte de cabello, Barba": 20000,
-    "Corte de cabello, Barba, Cejas": 25000
-  };
-
-  let horaSeleccionada = "";
-  const fechaInput = document.getElementById("fecha");
-  const btnGuardar = document.getElementById("btnGuardar");
-
-  const hoy = new Date();
-  const hoyISO = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000)
-    .toISOString()
-    .split("T")[0];
-  fechaInput.min = hoyISO;
-
-  const ahora = new Date();
-  const cierre = new Date();
-  cierre.setHours(20, 0, 0, 0);
-  if (ahora > cierre) {
-    const mañana = new Date(ahora);
-    mañana.setDate(mañana.getDate() + 1);
-    const mañanaISO = new Date(mañana.getTime() - mañana.getTimezoneOffset() * 60000)
-      .toISOString()
-      .split("T")[0];
-    fechaInput.min = mañanaISO;
-
-    Swal.fire({
-      icon: "info",
-      title: "Citas cerradas por hoy",
-      text: "Ya no se pueden agendar más turnos hoy. Intenta mañana.",
-      background: "#111",
-      color: "#fff",
-      confirmButtonColor: "gold"
-    });
-  }
-
-  document.getElementById("servicio").addEventListener("change", () => {
-    const servicio = document.getElementById("servicio").value;
-    document.getElementById("precio").value = precios[servicio]
-      ? `$${precios[servicio]}`
-      : "";
-  });
-
-  document.getElementById("fecha").addEventListener("change", async () => {
-    const fecha = fechaInput.value;
-    if (!fecha) return;
-
-    const { data: citas, error } = await supabase
-      .from("citas")
-      .select("hora")
-      .eq("fecha", fecha);
-
-    if (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudieron cargar los horarios.",
-        background: "#111",
-        color: "#fff"
-      });
-      return;
-    }
-
-    const ocupados = citas.map(c => c.hora);
-    const lista = document.getElementById("listaHorarios");
-    lista.innerHTML = "<h3>Horarios disponibles:</h3>";
-
-    const fechaSeleccionada = new Date(fecha + "T00:00:00");
-    const hoy = new Date();
-    const esHoy = fechaSeleccionada.toDateString() === hoy.toDateString();
-
-    for (let h = 10; h <= 20; h++) {
-      for (let m of [0, 30]) {
-        if (h === 13 && m === 30) {
-          const div = document.createElement("div");
-          div.className = "horario ocupado";
-          div.innerHTML = `<span class="hora">1:30 – 2:30</span> <span class="estado">🕑 Almuerzo</span>`;
-          lista.appendChild(div);
-          continue;
-        }
-        if (h === 14) continue;
-
-        const hora24 = `${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`;
-        const hora12 = h > 12 ? h - 12 : h;
-        const ampm = h >= 12 ? "PM" : "AM";
-        const horaFormateada = `${hora12}:${m === 0 ? "00" : "30"} ${ampm}`;
-
-        let ocupado = ocupados.includes(hora24);
-
-        if (esHoy) {
-          const ahora = new Date();
-          const horaTurnoLocal = new Date(
-            fechaSeleccionada.getFullYear(),
-            fechaSeleccionada.getMonth(),
-            fechaSeleccionada.getDate(),
-            h,
-            m,
-            0
-          );
-
-          if (horaTurnoLocal.getTime() <= ahora.getTime()) {
-            ocupado = true;
-          }
-        }
-
-        const div = document.createElement("div");
-        div.className = `horario ${ocupado ? "ocupado" : "libre"}`;
-        div.innerHTML = `<span class="hora">${horaFormateada}</span> <span class="estado">${ocupado ? "No disponible" : "Libre"}</span>`;
-
-        if (!ocupado) div.addEventListener("click", () => seleccionarHora(hora24, div));
-        lista.appendChild(div);
-      }
-    }
-  });
-
-  function seleccionarHora(hora, div) {
-    horaSeleccionada = hora;
-    document.querySelectorAll(".libre").forEach(el => {
-      el.style.border = "1px solid #333";
-      el.style.backgroundColor = "#1a1a1a";
-    });
-    div.style.border = "2px solid gold";
-    div.style.backgroundColor = "rgba(255, 215, 0, 0.1)";
-  }
-
-  document.getElementById("formCita").addEventListener("submit", async e => {
-    e.preventDefault();
-
-    if (!horaSeleccionada) {
-      Swal.fire({
-        icon: "warning",
-        title: "Selecciona un horario",
-        background: "#111",
-        color: "#fff"
-      });
-      return;
-    }
-
-    btnGuardar.disabled = true;
-    btnGuardar.textContent = "Guardando...";
-
-    const nombre = document.getElementById("nombre").value.trim();
-    const telefono = document.getElementById("telefono").value.trim();
-    const servicio = document.getElementById("servicio").value;
-    const fecha = document.getElementById("fecha").value;
-
-    const datos = {
-      nombre,
-      telefono,
-      servicio,
-      fecha,
-      hora: horaSeleccionada,
-      precio: parseFloat(document.getElementById("precio").value.replace("$", "") || 0)
+    const precios = {
+      "Corte de niño": 14000,
+      "Corte de caballero": 16000,
+      "Corte de cabello, Barba": 20000,
+      "Corte de cabello, Barba, Cejas": 25000
     };
 
-    const { error } = await supabase.from("citas").insert([datos]);
+    let horaSeleccionada = "";
+    const fechaInput = document.getElementById("fecha");
+    const btnGuardar = document.getElementById("btnGuardar");
 
-    if (error) {
-      Swal.fire({
-        icon: "error",
-        title: "❌ No se pudo guardar",
-        text: "Hubo un error al registrar tu turno.",
-        background: "#111",
-        color: "#fff",
-        confirmButtonColor: "#ff5555"
-      });
-      btnGuardar.disabled = false;
-      btnGuardar.textContent = "Guardar turno";
-      return;
-    }
+    // 🔹 LIMPIAR CITAS DE MÁS DE 15 DÍAS
+    (async () => {
+      const hoy = new Date();
+      const limite = new Date(hoy);
+      limite.setDate(hoy.getDate() - 15);
+      const limiteISO = limite.toISOString().split("T")[0];
+      await supabase.from("citas").delete().lt("fecha", limiteISO);
+    })();
 
-    Swal.fire({
-      icon: "success",
-      title: "Turno agendado",
-      text: "Tu cita fue registrada con éxito.",
-      background: "#111",
-      color: "#fff",
-      confirmButtonColor: "gold",
-      showConfirmButton: false,
-      timer: 2500,
-      willClose: () => {
-        window.location.href = "index.html";
+    // 🔹 Fecha mínima (hoy)
+    const hoy = new Date();
+    const localISO = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000)
+      .toISOString()
+      .split("T")[0];
+    fechaInput.min = localISO;
+
+    // 🔹 Mostrar precio
+    document.getElementById("servicio").addEventListener("change", () => {
+      const servicio = document.getElementById("servicio").value;
+      document.getElementById("precio").value = precios[servicio]
+        ? `$${precios[servicio]}`
+        : "";
+    });
+
+    // 🔹 Cargar horarios
+    document.getElementById("fecha").addEventListener("change", async () => {
+      const fecha = fechaInput.value;
+      if (!fecha) return;
+
+      const { data: citas, error } = await supabase
+        .from("citas")
+        .select("hora")
+        .eq("fecha", fecha);
+
+      if (error) return;
+
+      const ocupados = citas.map(c => c.hora);
+      const lista = document.getElementById("listaHorarios");
+      lista.innerHTML = "<h3>Horarios disponibles:</h3>";
+
+      const hoyLocal = new Date();
+      const hoyISO = hoyLocal.toISOString().split("T")[0];
+
+      for (let h = 10; h <= 20; h++) {
+        for (let m of [0, 30]) {
+          if (h === 13 && m === 30) {
+            const div = document.createElement("div");
+            div.className = "horario ocupado";
+            div.innerHTML = `<span class="hora">1:30 – 2:30</span> <span class="estado">🕑 Almuerzo</span>`;
+            lista.appendChild(div);
+            continue;
+          }
+          if (h === 14) continue;
+
+          const hora24 = `${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`;
+          const hora12 = h > 12 ? h - 12 : h;
+          const ampm = h >= 12 ? "PM" : "AM";
+          const horaFormateada = `${hora12}:${m === 0 ? "00" : "30"} ${ampm}`;
+
+          let pasada = false;
+          if (fecha === hoyISO) {
+            const horaTurno = new Date(hoyLocal);
+            horaTurno.setHours(h, m, 0, 0);
+            if (horaTurno < hoyLocal) pasada = true;
+          }
+
+          const ocupado = ocupados.includes(hora24);
+          const div = document.createElement("div");
+          if (ocupado || pasada) {
+            div.className = "horario ocupado";
+            div.innerHTML = `<span class="hora">${horaFormateada}</span> <span class="estado">No disponible</span>`;
+          } else {
+            div.className = "horario libre";
+            div.innerHTML = `<span class="hora">${horaFormateada}</span> <span class="estado">Libre</span>`;
+            div.addEventListener("click", () => seleccionarHora(hora24, div));
+          }
+          lista.appendChild(div);
+        }
       }
     });
-  });
-</script>
 
+    function seleccionarHora(hora, div) {
+      horaSeleccionada = hora;
+      document.querySelectorAll(".libre").forEach(el => {
+        el.style.border = "1px solid #333";
+        el.style.backgroundColor = "#1a1a1a";
+      });
+      div.style.border = "2px solid gold";
+      div.style.backgroundColor = "rgba(255,215,0,0.1)";
+    }
 
+    // 🔹 GUARDAR TURNO
+    document.getElementById("formCita").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const telefono = document.getElementById("telefono").value.trim();
+      if (!/^\d{10}$/.test(telefono)) {
+        Swal.fire({
+          icon: "warning",
+          title: "Número inválido",
+          text: "El número de teléfono debe tener exactamente 10 dígitos.",
+          background: "#111",
+          color: "#fff",
+          confirmButtonColor: "gold"
+        });
+        return;
+      }
+
+      if (!horaSeleccionada) {
+        Swal.fire({ icon: "warning", title: "Selecciona un horario", background: "#111", color: "#fff" });
+        return;
+      }
+
+      btnGuardar.disabled = true;
+      btnGuardar.textContent = "Guardando...";
+
+      const nombre = document.getElementById("nombre").value.trim();
+      const servicio = document.getElementById("servicio").value;
+      const fecha = document.getElementById("fecha").value;
+
+      const datos = {
+        nombre,
+        telefono,
+        servicio,
+        fecha,
+        hora: horaSeleccionada,
+        precio: parseFloat(document.getElementById("precio").value.replace("$", "") || 0),
+      };
+
+      const { error } = await supabase.from("citas").insert([datos]);
+
+      if (error) {
+        Swal.fire({
+          icon: "error",
+          title: "❌ No se pudo guardar",
+          text: "Hubo un error al registrar tu turno.",
+          background: "#111",
+          color: "#fff",
+          confirmButtonColor: "#ff5555"
+        });
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = "Guardar turno";
+        return;
+      }
+
+      Swal.fire({
+        icon: "success",
+        title: "Turno agendado ",
+        text: "Tu cita fue registrada con éxito.",
+        background: "#111",
+        color: "#fff",
+        confirmButtonColor: "gold",
+        showConfirmButton: true
+      }).then(() => {
+        window.location.href = "index.html";
+      });
+    });
+  </script>
 </body>
 </html>
