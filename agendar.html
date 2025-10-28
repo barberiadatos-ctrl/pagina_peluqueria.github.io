@@ -169,7 +169,7 @@
         <h3>Selecciona un horario:</h3>
       </div>
 
-      <button type="submit" class="boton">Guardar turno</button>
+      <button type="submit" class="boton" id="btnGuardar">Guardar turno</button>
     </form>
 
     <footer>© Dorado Barber — Agenda online</footer>
@@ -191,19 +191,19 @@
 
     let horaSeleccionada = "";
     const fechaInput = document.getElementById("fecha");
+    const btnGuardar = document.getElementById("btnGuardar");
 
     // --- Configurar fecha mínima ---
     const hoy = new Date();
     const localISO = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000).toISOString().split("T")[0];
     fechaInput.min = localISO;
 
-    // --- Verificar si el día actual ya pasó (después de las 7:30 PM) ---
+    // --- Verificar si el día actual ya pasó (después de las 8:00 PM) ---
     const ahora = new Date();
     const cierre = new Date();
-    cierre.setHours(20, 0, 0, 0); // 7:30 PM
+    cierre.setHours(20, 0, 0, 0); // hasta las 8:00 PM
 
     if (ahora > cierre) {
-      // Bloquear el día actual
       const mañana = new Date(ahora);
       mañana.setDate(mañana.getDate() + 1);
       const mañanaISO = new Date(mañana.getTime() - mañana.getTimezoneOffset() * 60000).toISOString().split("T")[0];
@@ -252,7 +252,7 @@
       const lista = document.getElementById("listaHorarios");
       lista.innerHTML = "<h3>Horarios disponibles:</h3>";
 
-      for (let h = 10; h <= 20; h++) { // hasta las 8 PM
+      for (let h = 10; h <= 20; h++) {
         for (let m of [0, 30]) {
           if (h === 13 && m === 30) {
             const div = document.createElement("div");
@@ -298,6 +298,9 @@
         return;
       }
 
+      btnGuardar.disabled = true;
+      btnGuardar.textContent = "Guardando...";
+
       const nombre = document.getElementById("nombre").value.trim();
       const telefono = document.getElementById("telefono").value.trim();
       const servicio = document.getElementById("servicio").value;
@@ -323,6 +326,8 @@
           color: "#fff",
           confirmButtonColor: "#ff5555"
         });
+        btnGuardar.disabled = false;
+        btnGuardar.textContent = "Guardar turno";
         return;
       }
 
@@ -334,7 +339,10 @@
         color: "#fff",
         confirmButtonColor: "gold",
         showConfirmButton: false,
-        timer: 2500
+        timer: 2500,
+        willClose: () => {
+          window.location.href = "index.html"; // vuelve al inicio
+        }
       });
     });
   </script>
