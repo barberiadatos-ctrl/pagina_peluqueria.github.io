@@ -178,7 +178,8 @@
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
     const SUPABASE_URL = "https://vukawliizqcjhptpyxdi.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1a2F3bGlpenFjamhwdHB5eGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTEwMzksImV4cCI6MjA3Njg4NzAzOX0.XhH_NEwxiEaYqS4vZiWm4DjSXQ1bLZkMtdB0g8ewNtM";
+    const SUPABASE_KEY =
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1a2F3bGlpenFjamhwdHB5eGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTEwMzksImV4cCI6MjA3Njg4NzAzOX0.XhH_NEwxiEaYqS4vZiWm4DjSXQ1bLZkMtdB0g8ewNtM";
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const precios = {
@@ -192,7 +193,7 @@
     const fechaInput = document.getElementById("fecha");
     const btnGuardar = document.getElementById("btnGuardar");
 
-    // 🔹 LIMPIAR CITAS DE MÁS DE 15 DÍAS
+
     (async () => {
       const hoy = new Date();
       const limite = new Date(hoy);
@@ -201,14 +202,13 @@
       await supabase.from("citas").delete().lt("fecha", limiteISO);
     })();
 
-    // 🔹 Fecha mínima (hoy)
+
     const hoy = new Date();
-    const localISO = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000)
+    const hoyISO = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000)
       .toISOString()
       .split("T")[0];
-    fechaInput.min = localISO;
+    fechaInput.min = hoyISO;
 
-    // 🔹 Mostrar precio
     document.getElementById("servicio").addEventListener("change", () => {
       const servicio = document.getElementById("servicio").value;
       document.getElementById("precio").value = precios[servicio]
@@ -216,11 +216,30 @@
         : "";
     });
 
-    // 🔹 Cargar horarios
-    document.getElementById("fecha").addEventListener("change", async () => {
+ 
+    fechaInput.addEventListener("change", async () => {
       const fecha = fechaInput.value;
       if (!fecha) return;
 
+      const fechaSeleccionada = new Date(fecha + "T00:00:00");
+      const diaSemana = fechaSeleccionada.getDay();
+
+      if (diaSemana === 4) {
+        Swal.fire({
+          icon: "info",
+          title: "Día no disponible",
+          text: "El barbero descansa los días jueves. Por favor selecciona otro día.",
+          background: "#111",
+          color: "#fff",
+          confirmButtonColor: "gold"
+        });
+        fechaInput.value = "";
+        document.getElementById("listaHorarios").innerHTML =
+          "<h3>Selecciona un horario:</h3>";
+        return;
+      }
+
+      // Cargar horarios solo si NO es jueves
       const { data: citas, error } = await supabase
         .from("citas")
         .select("hora")
@@ -283,7 +302,6 @@
       div.style.backgroundColor = "rgba(255,215,0,0.1)";
     }
 
-    // 🔹 GUARDAR TURNO
     document.getElementById("formCita").addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -301,7 +319,12 @@
       }
 
       if (!horaSeleccionada) {
-        Swal.fire({ icon: "warning", title: "Selecciona un horario", background: "#111", color: "#fff" });
+        Swal.fire({
+          icon: "warning",
+          title: "Selecciona un horario",
+          background: "#111",
+          color: "#fff"
+        });
         return;
       }
 
@@ -343,8 +366,7 @@
         text: "Tu cita fue registrada con éxito.",
         background: "#111",
         color: "#fff",
-        confirmButtonColor: "gold",
-        showConfirmButton: true
+        confirmButtonColor: "gold"
       }).then(() => {
         window.location.href = "index.html";
       });
