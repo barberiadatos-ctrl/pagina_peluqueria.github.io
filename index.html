@@ -38,27 +38,27 @@
       font-size: 2.4rem;
       margin: 0;
       font-weight: 800;
-      color: #fff;
+      color: #f5c518;
       text-transform: uppercase;
       letter-spacing: 2px;
       text-shadow:
-        0 0 10px rgba(255, 255, 255, 0.6),
-        0 0 20px rgba(255, 255, 255, 0.4),
-        0 0 30px rgba(255, 255, 255, 0.2);
+        0 0 10px rgba(245, 197, 24, 0.6),
+        0 0 20px rgba(245, 197, 24, 0.4),
+        0 0 30px rgba(245, 197, 24, 0.2);
       animation: glow 3s infinite alternate ease-in-out;
     }
 
     @keyframes glow {
       from {
         text-shadow:
-          0 0 5px rgba(255, 255, 255, 0.4),
-          0 0 15px rgba(255, 255, 255, 0.2);
+          0 0 5px rgba(245, 197, 24, 0.4),
+          0 0 15px rgba(245, 197, 24, 0.2);
       }
       to {
         text-shadow:
-          0 0 15px rgba(255, 255, 255, 0.8),
-          0 0 30px rgba(255, 255, 255, 0.5),
-          0 0 45px rgba(255, 255, 255, 0.3);
+          0 0 15px rgba(245, 197, 24, 0.8),
+          0 0 30px rgba(245, 197, 24, 0.5),
+          0 0 45px rgba(245, 197, 24, 0.3);
       }
     }
 
@@ -175,6 +175,52 @@
       margin-left: 0.3rem;
     }
 
+    /* ✂️ Botón flotante del peluquero */
+    #botonPeluquero {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: radial-gradient(circle at center, #f5c518 30%, #000 100%);
+      border: 2px solid #f5c518;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      box-shadow: 0 0 20px rgba(245, 197, 24, 0.5);
+      opacity: 0.85;
+      z-index: 1000;
+    }
+
+    #botonPeluquero i {
+      color: #000;
+      font-size: 1.8rem;
+      transition: transform 0.4s ease;
+    }
+
+    #botonPeluquero:hover {
+      transform: scale(1.15) rotate(5deg);
+      background: radial-gradient(circle at center, #ffd700 40%, #000 100%);
+      box-shadow: 0 0 25px rgba(245, 197, 24, 0.8);
+    }
+
+    #botonPeluquero:hover i {
+      transform: rotate(20deg);
+    }
+
+    /* Animación de brillo suave */
+    @keyframes blink {
+      0%, 100% { box-shadow: 0 0 10px rgba(245, 197, 24, 0.5); }
+      50% { box-shadow: 0 0 25px rgba(245, 197, 24, 0.9); }
+    }
+
+    #botonPeluquero {
+      animation: blink 4s infinite ease-in-out;
+    }
+
     @media (max-width: 768px) {
       header h1 {
         font-size: 1.8rem;
@@ -189,6 +235,10 @@
       .servicios li span {
         margin-top: 0.3rem;
       }
+      #botonPeluquero {
+        width: 50px;
+        height: 50px;
+      }
     }
   </style>
 </head>
@@ -200,7 +250,6 @@
   <nav>
     <a href="index.html">Inicio</a>
     <a href="agendar.html">Agendar cita</a>
-    <a href="admin.html">Panel del peluquero</a>
   </nav>
 
   <section class="hero">
@@ -219,10 +268,22 @@
     </ul>
   </section>
 
+  <!-- ✂️ Botón secreto del peluquero -->
+  <div id="botonPeluquero" title="Panel del peluquero">
+    <i class="fa-solid fa-scissors"></i>
+  </div>
+
   <footer>
     <p><i class="fa-solid fa-location-dot"></i> Calle Principal #123, Ciudad Bella | <i class="fa-solid fa-phone"></i> 300 123 4567</p>
     <p>Horario: Lunes a Domingo 10:00am – 8:00pm</p>
     <p>© 2025 <strong>Toche's Nissi Barber</strong></p>
   </footer>
+
+  <script>
+    // ✂️ Al hacer clic en las tijeras, va al panel del peluquero
+    document.getElementById("botonPeluquero").addEventListener("click", () => {
+      window.location.href = "admin.html";
+    });
+  </script>
 </body>
 </html>

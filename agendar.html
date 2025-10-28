@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Agendar Cita — Dorado Barber</title>
-  <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     body {
@@ -192,9 +191,35 @@
 
     let horaSeleccionada = "";
     const fechaInput = document.getElementById("fecha");
-    const hoy = new Date().toISOString().split("T")[0];
-    fechaInput.min = hoy;
 
+    // --- Configurar fecha mínima ---
+    const hoy = new Date();
+    const localISO = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000).toISOString().split("T")[0];
+    fechaInput.min = localISO;
+
+    // --- Verificar si el día actual ya pasó (después de las 7:30 PM) ---
+    const ahora = new Date();
+    const cierre = new Date();
+    cierre.setHours(20, 0, 0, 0); // 7:30 PM
+
+    if (ahora > cierre) {
+      // Bloquear el día actual
+      const mañana = new Date(ahora);
+      mañana.setDate(mañana.getDate() + 1);
+      const mañanaISO = new Date(mañana.getTime() - mañana.getTimezoneOffset() * 60000).toISOString().split("T")[0];
+      fechaInput.min = mañanaISO;
+
+      Swal.fire({
+        icon: "info",
+        title: "Citas cerradas por hoy 💈",
+        text: "Ya no se pueden agendar más turnos hoy. Intenta para mañana.",
+        background: "#111",
+        color: "#fff",
+        confirmButtonColor: "gold"
+      });
+    }
+
+    // Mostrar precio
     document.getElementById("servicio").addEventListener("change", () => {
       const servicio = document.getElementById("servicio").value;
       document.getElementById("precio").value = precios[servicio]
@@ -202,6 +227,7 @@
         : "";
     });
 
+    // Cargar horarios
     document.getElementById("fecha").addEventListener("change", async () => {
       const fecha = fechaInput.value;
       if (!fecha) return;
@@ -212,7 +238,13 @@
         .eq("fecha", fecha);
 
       if (error) {
-        Swal.fire({ icon: "error", title: "Error", text: "No se pudieron cargar los horarios.", background: "#111", color: "#fff" });
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudieron cargar los horarios.",
+          background: "#111",
+          color: "#fff"
+        });
         return;
       }
 
@@ -220,10 +252,8 @@
       const lista = document.getElementById("listaHorarios");
       lista.innerHTML = "<h3>Horarios disponibles:</h3>";
 
-      for (let h = 10; h <= 20; h++) {
+      for (let h = 10; h <= 20; h++) { // hasta las 8 PM
         for (let m of [0, 30]) {
-          const hora24 = `${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`;
-
           if (h === 13 && m === 30) {
             const div = document.createElement("div");
             div.className = "horario ocupado";
@@ -233,7 +263,8 @@
           }
           if (h === 14) continue;
 
-          let hora12 = h > 12 ? h - 12 : h;
+          const hora24 = `${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`;
+          const hora12 = h > 12 ? h - 12 : h;
           const ampm = h >= 12 ? "PM" : "AM";
           const horaFormateada = `${hora12}:${m === 0 ? "00" : "30"} ${ampm}`;
           const ocupado = ocupados.includes(hora24);
@@ -258,6 +289,7 @@
       div.style.backgroundColor = "rgba(255, 215, 0, 0.1)";
     }
 
+    // Guardar cita
     document.getElementById("formCita").addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -294,7 +326,6 @@
         return;
       }
 
-      // ✅ Éxito con animación
       Swal.fire({
         icon: "success",
         title: "Turno agendado 💈",
@@ -305,15 +336,6 @@
         showConfirmButton: false,
         timer: 2500
       });
-
-      // 💬 Enviar WhatsApp automático
-      const mensaje = `📅 Nueva cita agendada:\n👤 Nombre: ${nombre}\n Hora: ${horaSeleccionada}\n Fecha: ${fecha}`;
-      const numeroBarberia = "573202949645"; // 👉 CAMBIA ESTE NÚMERO
-      const url = `https://wa.me/${numeroBarberia}?text=${encodeURIComponent(mensaje)}`;
-      setTimeout(() => window.open(url, "_blank"), 2500);
-
-      e.target.reset();
-      document.getElementById("listaHorarios").innerHTML = "<h3>Selecciona un horario:</h3>";
     });
   </script>
 </body>
