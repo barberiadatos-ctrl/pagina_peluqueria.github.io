@@ -169,6 +169,23 @@
       from { opacity: 0; transform: translateY(-20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* 🔊 Botón activar sonido */
+    #activarSonido {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 10000;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+    #activarSonido:hover { background: #005fcc; }
   </style>
 </head>
 <body>
@@ -182,6 +199,8 @@
 
   <div id="contenedorCitas"></div>
   <button id="btnArriba" title="Volver arriba"><i class="fa-solid fa-arrow-up"></i></button>
+
+  <button id="activarSonido">🔊 Activar sonido</button>
 
   <footer><span style="color:#f5c518;">Dorado Barber</span> — Panel de administración</footer>
 
@@ -198,11 +217,31 @@ const contenedor = document.getElementById("contenedorCitas");
 const btnActualizar = document.getElementById("actualizar");
 const btnArriba = document.getElementById("btnArriba");
 const alertaDB = document.getElementById("alertaDB");
+const btnSonido = document.getElementById("activarSonido");
 
+// 🎵 Sonido notificación
+const sonidoNotificacion = new Audio("./noti.mp3");
+sonidoNotificacion.volume = 1.0;
+let sonidoHabilitado = false;
+
+// 🔊 Activar sonido
+btnSonido.addEventListener("click", async () => {
+  try {
+    await sonidoNotificacion.play();
+    sonidoNotificacion.pause();
+    sonidoNotificacion.currentTime = 0;
+    sonidoHabilitado = true;
+    btnSonido.textContent = "🔔 Sonido activado";
+    btnSonido.style.background = "green";
+    setTimeout(() => btnSonido.remove(), 2000);
+    mostrarToast("Sonido de notificaciones activado ✅");
+  } catch (err) {
+    mostrarToast("Haz clic de nuevo para permitir el sonido 🔈");
+  }
+});
+
+// 🔁 Botón actualizar citas
 btnActualizar.addEventListener("click", cargarCitas);
-
-const sonidoNotificacion = new Audio("jug-pop-2-186887.mp3");
-sonidoNotificacion.volume = 0.7;
 
 async function cargarCitas() {
   contenedor.innerHTML = "<p style='text-align:center;color:#bbb;'>Cargando citas...</p>";
@@ -315,11 +354,15 @@ function mostrarToast(mensaje) {
   setTimeout(() => toast.remove(), 5000);
 }
 
+// 🔔 Suscripción en tiempo real
 supabase
   .channel("nuevas-citas")
   .on("postgres_changes", { event: "INSERT", schema: "public", table: "citas" }, (payload) => {
-    sonidoNotificacion.play();
     mostrarToast(`Nuevo turno: ${payload.new.nombre} — ${payload.new.hora}`);
+    if (sonidoHabilitado) {
+      sonidoNotificacion.currentTime = 0;
+      sonidoNotificacion.play().catch(err => console.warn("No se pudo reproducir:", err));
+    }
     cargarCitas();
   })
   .subscribe();
