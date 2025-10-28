@@ -150,6 +150,26 @@
       margin-bottom: 1rem;
       display: none;
     }
+
+    /* 🧃 Notificación flotante */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #f5c518;
+      color: #000;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+      font-weight: bold;
+      animation: aparecer 0.5s ease forwards;
+      z-index: 9999;
+    }
+
+    @keyframes aparecer {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
@@ -167,123 +187,151 @@
   <footer>💈 <span style="color:#f5c518;">Dorado Barber</span> — Panel de administración</footer>
 
   <script type="module">
-  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-  const SUPABASE_URL = "https://vukawliizqcjhptpyxdi.supabase.co";
-  const SUPABASE_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1a2F3bGlpenFjamhwdHB5eGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTEwMzksImV4cCI6MjA3Njg4NzAzOX0.XhH_NEwxiEaYqS4vZiWm4DjSXQ1bLZkMtdB0g8ewNtM";
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL = "https://vukawliizqcjhptpyxdi.supabase.co";
+const SUPABASE_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1a2F3bGlpenFjamhwdHB5eGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMTEwMzksImV4cCI6MjA3Njg4NzAzOX0.XhH_NEwxiEaYqS4vZiWm4DjSXQ1bLZkMtdB0g8ewNtM";
 
-  const contenedor = document.getElementById("contenedorCitas");
-  const btnActualizar = document.getElementById("actualizar");
-  const btnArriba = document.getElementById("btnArriba");
-  const alertaDB = document.getElementById("alertaDB");
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  btnActualizar.addEventListener("click", cargarCitas);
+const contenedor = document.getElementById("contenedorCitas");
+const btnActualizar = document.getElementById("actualizar");
+const btnArriba = document.getElementById("btnArriba");
+const alertaDB = document.getElementById("alertaDB");
 
-  async function cargarCitas() {
-    contenedor.innerHTML = "<p style='text-align:center;color:#bbb;'>Cargando citas...</p>";
+btnActualizar.addEventListener("click", cargarCitas);
 
-    const { data: citas, error } = await supabase
-      .from("citas")
-      .select("*")
-      .order("fecha", { ascending: true })
-      .order("hora", { ascending: true });
+// 🔔 sonido en línea (seguro y liviano)
+const sonidoNotificacion = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_597e6a0c81.mp3?filename=notification-bell-1-14714.mp3");
+sonidoNotificacion.volume = 0.7;
 
-    if (error) {
-      contenedor.innerHTML = "<p style='text-align:center;color:red;'>Error al cargar citas</p>";
-      return;
-    }
+// Cargar citas
+async function cargarCitas() {
+  contenedor.innerHTML = "<p style='text-align:center;color:#bbb;'>Cargando citas...</p>";
 
-    if (!citas.length) {
-      contenedor.innerHTML = "<p style='text-align:center;color:#aaa;'>No hay citas registradas</p>";
-      return;
-    }
+  const { data: citas, error } = await supabase
+    .from("citas")
+    .select("*")
+    .order("fecha", { ascending: true })
+    .order("hora", { ascending: true });
 
-    const citasPorFecha = {};
-    for (const cita of citas) {
-      if (!citasPorFecha[cita.fecha]) citasPorFecha[cita.fecha] = [];
-      citasPorFecha[cita.fecha].push(cita);
-    }
-
-    // --- Ajuste para hora local (GMT-5 o la del usuario) ---
-    const ahora = new Date();
-    const offset = ahora.getTimezoneOffset() * 60000; // minutos → ms
-    const local = new Date(ahora.getTime() - offset); // hora local correcta
-    const hoy = local.toISOString().split("T")[0]; // yyyy-mm-dd local
-
-    contenedor.innerHTML = "";
-
-    const fechas = Object.keys(citasPorFecha).sort((a, b) => new Date(a) - new Date(b));
-    const pasadas = [];
-    const futuras = [];
-
-    for (const f of fechas) {
-      if (f < hoy) pasadas.push(f);
-      else if (f > hoy) futuras.push(f);
-    }
-
-    if (citasPorFecha[hoy]) renderDia(hoy, citasPorFecha[hoy], "dia-hoy", "Hoy");
-
-    if (futuras.length > 0) {
-      const sep = document.createElement("div");
-      sep.className = "separador";
-      sep.textContent = "Próximos días";
-      contenedor.appendChild(sep);
-      futuras.forEach(f => renderDia(f, citasPorFecha[f], "dia-futuro"));
-    }
-
-    if (pasadas.length > 0) {
-      const sep = document.createElement("div");
-      sep.className = "separador";
-      sep.textContent = "Días pasados";
-      contenedor.appendChild(sep);
-      pasadas.reverse().forEach(f => renderDia(f, citasPorFecha[f], "dia-pasado"));
-    }
-
-    verificarUsoBaseDatos();
+  if (error) {
+    contenedor.innerHTML = "<p style='text-align:center;color:red;'>Error al cargar citas</p>";
+    return;
   }
 
-  function renderDia(fecha, lista, clase, tituloPersonalizado) {
-    const fechaObj = new Date(fecha + "T00:00:00");
-    const titulo = tituloPersonalizado || fechaObj.toLocaleDateString("es-ES", {
-      weekday: "long", year: "numeric", month: "long", day: "numeric",
-    });
-
-    const div = document.createElement("div");
-    div.className = `dia ${clase}`;
-    div.innerHTML = `
-      <h2>${titulo.charAt(0).toUpperCase() + titulo.slice(1)}</h2>
-      <table>
-        <thead>
-          <tr><th>Cliente</th><th>Teléfono</th><th>Servicio</th><th>Hora</th></tr>
-        </thead>
-        <tbody>
-          ${lista.sort((a,b)=>a.hora.localeCompare(b.hora))
-            .map(c=>`<tr><td>${c.nombre}</td><td>${c.telefono}</td><td>${c.servicio}</td><td>${c.hora}</td></tr>`).join("")}
-        </tbody>
-      </table>`;
-    contenedor.appendChild(div);
+  if (!citas.length) {
+    contenedor.innerHTML = "<p style='text-align:center;color:#aaa;'>No hay citas registradas</p>";
+    return;
   }
 
-  async function verificarUsoBaseDatos() {
-    const LIMITE = 10000, UMBRAL = 9000;
-    const { count, error } = await supabase.from("citas").select("*", { count: "exact", head: true });
-    if (error) return;
-    if (count >= UMBRAL) {
-      alertaDB.style.display = "block";
-      alertaDB.innerHTML = `⚠️ <strong>Atención:</strong> Tu base tiene <strong>${count}</strong> registros (máx ${LIMITE}).`;
-    } else alertaDB.style.display = "none";
+  const citasPorFecha = {};
+  for (const cita of citas) {
+    if (!citasPorFecha[cita.fecha]) citasPorFecha[cita.fecha] = [];
+    citasPorFecha[cita.fecha].push(cita);
   }
 
-  setInterval(verificarUsoBaseDatos, 10 * 60 * 1000);
+  const ahora = new Date();
+  const offset = ahora.getTimezoneOffset() * 60000;
+  const local = new Date(ahora.getTime() - offset);
+  const hoy = local.toISOString().split("T")[0];
 
-  window.addEventListener("scroll", () => {
-    btnArriba.style.display = window.scrollY > 300 ? "flex" : "none";
+  contenedor.innerHTML = "";
+
+  const fechas = Object.keys(citasPorFecha).sort((a, b) => new Date(a) - new Date(b));
+  const pasadas = [];
+  const futuras = [];
+
+  for (const f of fechas) {
+    if (f < hoy) pasadas.push(f);
+    else if (f > hoy) futuras.push(f);
+  }
+
+  if (citasPorFecha[hoy]) renderDia(hoy, citasPorFecha[hoy], "dia-hoy", "Hoy");
+  if (futuras.length > 0) {
+    const sep = document.createElement("div");
+    sep.className = "separador";
+    sep.textContent = "Próximos días";
+    contenedor.appendChild(sep);
+    futuras.forEach(f => renderDia(f, citasPorFecha[f], "dia-futuro"));
+  }
+  if (pasadas.length > 0) {
+    const sep = document.createElement("div");
+    sep.className = "separador";
+    sep.textContent = "Días pasados";
+    contenedor.appendChild(sep);
+    pasadas.reverse().forEach(f => renderDia(f, citasPorFecha[f], "dia-pasado"));
+  }
+
+  verificarUsoBaseDatos();
+}
+
+function renderDia(fecha, lista, clase, tituloPersonalizado) {
+  const fechaObj = new Date(fecha + "T00:00:00");
+  const titulo = tituloPersonalizado || fechaObj.toLocaleDateString("es-ES", {
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
-  btnArriba.addEventListener("click", ()=>window.scrollTo({top:0,behavior:"smooth"}));
 
-  cargarCitas();
+  const div = document.createElement("div");
+  div.className = `dia ${clase}`;
+  div.innerHTML = `
+    <h2>${titulo.charAt(0).toUpperCase() + titulo.slice(1)}</h2>
+    <table>
+      <thead>
+        <tr><th>Cliente</th><th>Teléfono</th><th>Servicio</th><th>Hora</th></tr>
+      </thead>
+      <tbody>
+        ${lista
+          .sort((a, b) => a.hora.localeCompare(b.hora))
+          .map(
+            (c) => `<tr><td>${c.nombre}</td><td>${c.telefono}</td><td>${c.servicio}</td><td>${c.hora}</td></tr>`
+          )
+          .join("")}
+      </tbody>
+    </table>`;
+  contenedor.appendChild(div);
+}
+
+// Alerta de uso de base
+async function verificarUsoBaseDatos() {
+  const LIMITE = 10000, UMBRAL = 9000;
+  const { count, error } = await supabase.from("citas").select("*", { count: "exact", head: true });
+  if (error) return;
+  if (count >= UMBRAL) {
+    alertaDB.style.display = "block";
+    alertaDB.innerHTML = `⚠️ <strong>Atención:</strong> Tu base tiene <strong>${count}</strong> registros (máx ${LIMITE}).`;
+  } else alertaDB.style.display = "none";
+}
+
+// Botón volver arriba
+window.addEventListener("scroll", () => {
+  btnArriba.style.display = window.scrollY > 300 ? "flex" : "none";
+});
+btnArriba.addEventListener("click", () =>
+  window.scrollTo({ top: 0, behavior: "smooth" })
+);
+
+// 🔔 Toast flotante
+function mostrarToast(mensaje) {
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.textContent = mensaje;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 5000);
+}
+
+// Suscripción Realtime a nuevas citas
+supabase
+  .channel("nuevas-citas")
+  .on("postgres_changes", { event: "INSERT", schema: "public", table: "citas" }, (payload) => {
+    sonidoNotificacion.play();
+    mostrarToast(`💈 Nuevo turno: ${payload.new.nombre} — ${payload.new.hora}`);
+    cargarCitas();
+  })
+  .subscribe();
+
+cargarCitas();
   </script>
 </body>
 </html>
