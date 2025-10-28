@@ -193,15 +193,13 @@
     const fechaInput = document.getElementById("fecha");
     const btnGuardar = document.getElementById("btnGuardar");
 
-    // --- Configurar fecha mínima ---
     const hoy = new Date();
     const localISO = new Date(hoy.getTime() - hoy.getTimezoneOffset() * 60000).toISOString().split("T")[0];
     fechaInput.min = localISO;
 
-    // --- Verificar si el día actual ya pasó (después de las 8:00 PM) ---
     const ahora = new Date();
     const cierre = new Date();
-    cierre.setHours(20, 0, 0, 0); // hasta las 8:00 PM
+    cierre.setHours(20, 0, 0, 0);
 
     if (ahora > cierre) {
       const mañana = new Date(ahora);
@@ -211,7 +209,7 @@
 
       Swal.fire({
         icon: "info",
-        title: "Citas cerradas por hoy 💈",
+        title: "Citas cerradas por hoy",
         text: "Ya no se pueden agendar más turnos hoy. Intenta para mañana.",
         background: "#111",
         color: "#fff",
@@ -219,7 +217,6 @@
       });
     }
 
-    // Mostrar precio
     document.getElementById("servicio").addEventListener("change", () => {
       const servicio = document.getElementById("servicio").value;
       document.getElementById("precio").value = precios[servicio]
@@ -227,7 +224,6 @@
         : "";
     });
 
-    // Cargar horarios
     document.getElementById("fecha").addEventListener("change", async () => {
       const fecha = fechaInput.value;
       if (!fecha) return;
@@ -289,7 +285,6 @@
       div.style.backgroundColor = "rgba(255, 215, 0, 0.1)";
     }
 
-    // Guardar cita
     document.getElementById("formCita").addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -341,7 +336,7 @@
         showConfirmButton: false,
         timer: 2500,
         willClose: () => {
-          window.location.href = "index.html"; // vuelve al inicio
+          window.location.href = "index.html";
         }
       });
     });

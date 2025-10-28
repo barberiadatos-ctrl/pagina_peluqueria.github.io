@@ -151,7 +151,6 @@
       display: none;
     }
 
-    /* 🧃 Notificación flotante */
     .toast {
       position: fixed;
       top: 20px;
@@ -184,7 +183,7 @@
   <div id="contenedorCitas"></div>
   <button id="btnArriba" title="Volver arriba"><i class="fa-solid fa-arrow-up"></i></button>
 
-  <footer>💈 <span style="color:#f5c518;">Dorado Barber</span> — Panel de administración</footer>
+  <footer><span style="color:#f5c518;">Dorado Barber</span> — Panel de administración</footer>
 
   <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -202,11 +201,9 @@ const alertaDB = document.getElementById("alertaDB");
 
 btnActualizar.addEventListener("click", cargarCitas);
 
-// 🔔 sonido en línea (seguro y liviano)
 const sonidoNotificacion = new Audio("https://cdn.pixabay.com/download/audio/2022/03/15/audio_597e6a0c81.mp3?filename=notification-bell-1-14714.mp3");
 sonidoNotificacion.volume = 0.7;
 
-// Cargar citas
 async function cargarCitas() {
   contenedor.innerHTML = "<p style='text-align:center;color:#bbb;'>Cargando citas...</p>";
 
@@ -293,7 +290,6 @@ function renderDia(fecha, lista, clase, tituloPersonalizado) {
   contenedor.appendChild(div);
 }
 
-// Alerta de uso de base
 async function verificarUsoBaseDatos() {
   const LIMITE = 10000, UMBRAL = 9000;
   const { count, error } = await supabase.from("citas").select("*", { count: "exact", head: true });
@@ -304,7 +300,6 @@ async function verificarUsoBaseDatos() {
   } else alertaDB.style.display = "none";
 }
 
-// Botón volver arriba
 window.addEventListener("scroll", () => {
   btnArriba.style.display = window.scrollY > 300 ? "flex" : "none";
 });
@@ -312,7 +307,6 @@ btnArriba.addEventListener("click", () =>
   window.scrollTo({ top: 0, behavior: "smooth" })
 );
 
-// 🔔 Toast flotante
 function mostrarToast(mensaje) {
   const toast = document.createElement("div");
   toast.className = "toast";
@@ -321,12 +315,11 @@ function mostrarToast(mensaje) {
   setTimeout(() => toast.remove(), 5000);
 }
 
-// Suscripción Realtime a nuevas citas
 supabase
   .channel("nuevas-citas")
   .on("postgres_changes", { event: "INSERT", schema: "public", table: "citas" }, (payload) => {
     sonidoNotificacion.play();
-    mostrarToast(`💈 Nuevo turno: ${payload.new.nombre} — ${payload.new.hora}`);
+    mostrarToast(`Nuevo turno: ${payload.new.nombre} — ${payload.new.hora}`);
     cargarCitas();
   })
   .subscribe();
